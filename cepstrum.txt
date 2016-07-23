@@ -1,0 +1,74 @@
+
+[Yy,Fs,bit]=wavread('30001.wav');     %read the speech signal
+Yy=Yy/abs(max(Yy));                   %normalized the amplitudes
+N=640;
+w=window(@hamming,N);                 %hamming window
+Y1=Yy(10001:10000+N);                  %take 640 samples
+Y=Y1.*w;                              %multiply signal with hamming window
+Yf=fft(Y);                            %fft of signal Y
+Yy1=log(abs(Yf));                     %log of magnitude fft
+Yy2=ifft(Yy1);                        %ifft of log magnitude spectrum
+Yc=Yy2(1:length(Yy2)/2);              %cepstrum are summetric, half coeficient are use.
+                     %Low Time Liftering for vocal tract
+L=zeros(1,length(Yc));                % defining of liftering window
+L(1:60)=1;                            %liftering window        
+C1=real(Yc'.*L);                      %low-time lifted cepstrum
+                      %High-Time Liftering for excitation charactristics
+H=zeros(1,length(Yc));                %defing of liftering window
+H(60:length(Yc))=1;                   %liftering window
+C2=real(Yc'.*H);                      %high-time lifted cepstrum
+[Y_val,Y_loc]=max(C2);                 %finding the peak in high-time lifted cepstrum
+%location of the peak gives pitch period in quefrency samples
+pitch_time=Y_loc;
+%converting pitch peiod into samples frequency in hz.
+pitch_frequency=(1/pitch_time)*Fs
+                           %PLOTS:-
+figure(1);
+plot(Yy);
+title('input voice signal');
+ylabel('X(n)');
+figure(2);
+plot(Y1);
+title('640 samples of voice signal');
+ylabel('X(n)');
+xlabel('Time(samples)');
+figure(3);
+plot(Y);
+title('Hamming Windowed Signal');
+ylabel('S(n)');
+figure(4);
+plot(abs(Yf(1:320)));
+title('FFT of Voice Windowed Signal');
+ylabel('|S(w)|');
+figure(5);
+plot(Yy1(1:320));
+ylabel(' Log|S(w)| ');
+title('LOG OF AMPLITUDE DFT');
+figure(6);
+plot(Yy2(1:320));
+title('IDFT OF LOG|S(w)|');
+ylabel('CEPSTRUM C(n)');
+xlabel('Quefrency(samples))');
+figure(7);
+plot(L,'r');
+title('LOW-TIME LIFTRING WINDOW AND C(n)');
+ylim([-2,2]);
+hold on;
+plot(Yy2(1:320));
+figure(8);
+plot(C1);
+ylabel('amplitute');
+title('LOW-TIME LIFTERING CEPSTRUM');
+xlabel('Quefrency(samples)');
+figure(9);
+plot(H,'r');
+title('HIGH-TIME LIFTRING WINDOW AND C(n)');
+ylim([-2,2]);
+hold on;
+plot(Yy2(1:320));
+figure(10);
+plot(C2);
+ylabel('amplitute');
+title('HIGH-TIME LIFTERING CEPSTRUM');
+xlabel('Quefrency(samples)');
+disp(pitch_frequency);
